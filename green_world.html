@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Generating Green World</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="world" width="500" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById('world');
+        const ctx = canvas.getContext('2d');
+        // Set fixed canvas size
+        canvas.width = 500;
+        canvas.height = 500;
+
+        // Generate a green world with random green patches
+        function drawWorld() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const pixelSize = 4;
+            for (let y = 0; y < canvas.height; y += pixelSize) {
+                for (let x = 0; x < canvas.width; x += pixelSize) {
+                    // Randomize green shades
+                    let green = 128 + Math.floor(Math.random() * 127);
+                    ctx.fillStyle = `rgb(0,${green},0)`;
+                    ctx.fillRect(x, y, pixelSize, pixelSize);
+                }
+            }
+        }
+    drawWorld();
+    </script>
+</body>
+</html>
