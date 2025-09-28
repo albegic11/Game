@@ -10,13 +10,13 @@
     </style>
 </head>
 <body>
-    <canvas id="world" width="500" height="500"></canvas>
+    <canvas id="world" width="2000" height="2000"></canvas>
     <script>
         const canvas = document.getElementById('world');
         const ctx = canvas.getContext('2d');
         // Set fixed canvas size
-        canvas.width = 500;
-        canvas.height = 500;
+        canvas.width = 2000;
+        canvas.height = 2000;
 
         // Generate a green world with random green patches
         function drawWorld() {
