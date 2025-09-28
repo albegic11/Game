@@ -3,35 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto-Generating Green World</title>
+    <title>Run Run Zombie!</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
+        #player-img {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            pointer-events: none;
+            width: 170px;
+            height: 170px;
+        }
+        #zombie-img {
+            position: absolute;
+            left: 20%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            pointer-events: none;
+            width: 120px;
+            height: 120px;
+        }
     </style>
 </head>
 <body>
+    <div id="score" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);color:white;font-size:2em;z-index:200;font-family:sans-serif;text-shadow:2px 2px 4px #000;">Score: 0</div>
     <canvas id="world" width="2000" height="2000"></canvas>
+    <img src="Imported piskel.gif" alt="Player Sprite" id="player-img" />
+    <img src="Imported piskel (3).png" alt="Zombie Sprite" id="zombie-img" />
+        <img src="Imported piskel (7).png" alt="Game Over" id="gameover-img" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:60vw; height:auto; max-width:90vw; max-height:90vh; z-index:100; background:black;" />
     <script>
+        let score = 0;
+        const scoreDiv = document.getElementById('score');
+        let scoreInterval = setInterval(() => {
+            if (!gameOver) {
+                score++;
+                scoreDiv.textContent = 'Score: ' + score;
+            }
+        }, 1000);
+        let gameOver = false;
+        const gameOverImg = document.getElementById('gameover-img');
+
+        function checkCollision() {
+           
+            const playerRadius = Math.min(playerImg.offsetWidth, playerImg.offsetHeight) * 0.3;
+            const playerCenterX = playerX + playerImg.offsetWidth / 2;
+            const playerCenterY = playerY + playerImg.offsetHeight / 2;
+
+          
+            const zombieW = zombieImg.offsetWidth * 0.6;
+            const zombieH = zombieImg.offsetHeight * 0.6;
+            const zombieRect = {
+                left: zombieX + (zombieImg.offsetWidth - zombieW) / 2,
+                right: zombieX + (zombieImg.offsetWidth - zombieW) / 2 + zombieW,
+                top: zombieY + (zombieImg.offsetHeight - zombieH) / 2,
+                bottom: zombieY + (zombieImg.offsetHeight - zombieH) / 2 + zombieH
+            };
+
+      
+            const closestX = Math.max(zombieRect.left, Math.min(playerCenterX, zombieRect.right));
+            const closestY = Math.max(zombieRect.top, Math.min(playerCenterY, zombieRect.bottom));
+            const dx = playerCenterX - closestX;
+            const dy = playerCenterY - closestY;
+            return (dx * dx + dy * dy) < (playerRadius * playerRadius);
+        }
         const canvas = document.getElementById('world');
         const ctx = canvas.getContext('2d');
-        // Set fixed canvas size
-        canvas.width = 2000;
-        canvas.height = 2000;
+      
+        canvas.width = 1300;
+        canvas.height = 800;
 
-        // Generate a green world with random green patches
+       
         function drawWorld() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const pixelSize = 4;
             for (let y = 0; y < canvas.height; y += pixelSize) {
                 for (let x = 0; x < canvas.width; x += pixelSize) {
-                    // Randomize green shades
+                   
                     let green = 128 + Math.floor(Math.random() * 127);
                     ctx.fillStyle = `rgb(0,${green},0)`;
                     ctx.fillRect(x, y, pixelSize, pixelSize);
                 }
             }
         }
-    drawWorld();
+        drawWorld();
+
+        const playerImg = document.getElementById('player-img');
+        const zombieImg = document.getElementById('zombie-img');
+        let playerX = window.innerWidth / 2 - 16; 
+        let playerY = window.innerHeight / 2 - 16;
+        let zombieX = window.innerWidth * 0.2 - 16; 
+        let zombieY = window.innerHeight / 2 - 16;
+    let moveSpeed = 2; 
+        const zombieSpeed = 1.5; 
+        const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+
+        function updatePositions() {
+            playerImg.style.left = playerX + 'px';
+            playerImg.style.top = playerY + 'px';
+            zombieImg.style.left = zombieX + 'px';
+            zombieImg.style.top = zombieY + 'px';
+        }
+
+        function animate() {
+            if (gameOver) return;
+            if (keys.ArrowUp) playerY -= moveSpeed;
+            if (keys.ArrowDown) playerY += moveSpeed;
+            if (keys.ArrowLeft) playerX -= moveSpeed;
+            if (keys.ArrowRight) playerX += moveSpeed;
+
+           
+            const pw = playerImg.offsetWidth;
+            const ph = playerImg.offsetHeight;
+            let teleported = false;
+            if (playerX + pw < 0) { playerX = window.innerWidth - 1; teleported = true; }
+            if (playerX > window.innerWidth - 1) { playerX = -pw + 1; teleported = true; }
+            if (playerY + ph < 0) { playerY = window.innerHeight - 1; teleported = true; }
+            if (playerY > window.innerHeight - 1) { playerY = -ph + 1; teleported = true; }
+            if (teleported && moveSpeed > 0.2) moveSpeed = Math.max(0.2, moveSpeed - 0.1);
+
+            const dx = playerX - zombieX;
+            const dy = playerY - zombieY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist > 1) {
+                zombieX += (dx / dist) * zombieSpeed;
+                zombieY += (dy / dist) * zombieSpeed;
+            }
+
+            updatePositions();
+
+            if (checkCollision()) {
+                gameOver = true;
+                document.body.style.background = 'black';
+                gameOverImg.style.display = 'block';
+                playerImg.style.display = 'none';
+                zombieImg.style.display = 'none';
+                canvas.style.display = 'none';
+                scoreDiv.textContent = 'Final Score: ' + score;
+                scoreDiv.style.display = 'block';
+                clearInterval(scoreInterval);
+                return;
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        updatePositions();
+        animate();
+
+        window.addEventListener('resize', () => {
+           
+            playerX = window.innerWidth / 2 - 16;
+            playerY = window.innerHeight / 2 - 16;
+            zombieX = window.innerWidth * 0.2 - 16;
+            zombieY = window.innerHeight / 2 - 16;
+            updatePositions();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = true;
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = false;
+            }
+        });
     </script>
 </body>
 </html>
